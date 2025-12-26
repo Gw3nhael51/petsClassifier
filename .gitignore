@@ -1,0 +1,28 @@
+# Environnements virtuels
+.venv/
+venv/
+
+# Données brutes et générées
+data/
+train/
+test/
+
+# Fichiers Kaggle
+*.zip
+*.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs
+*.log
+
+# VSCode
+.vscode/
+
+# OS (macOS / Windows)
+.DS_Store
+Thumbs.db
