@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat vs Dog Classifier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.4s ease-out;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen flex items-center justify-center p-4 sm:p-6">
+
+    <div class="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 sm:p-8 w-full max-w-md">
+
+        <h1 class="text-2xl sm:text-3xl font-bold text-white text-center mb-6">
+            Cat vs Dog Classifier
+        </h1>
+
+        <!-- Drag & Drop Zone -->
+        <label id="dropzone"
+            class="block border-2 border-dashed border-gray-600 hover:border-blue-500 transition rounded-xl p-8 sm:p-10 cursor-pointer text-center bg-gray-900/30">
+            <div class="space-y-2">
+                <div class="text-4xl">📷</div>
+                <p class="text-gray-300 text-sm sm:text-base">Clique pour choisir une image</p>
+                <p class="text-gray-500 text-xs">ou glisse-la ici</p>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </label>
+
+        <!-- Preview -->
+        <div id="previewContainer" class="hidden mt-6 animate-fadeIn">
+            <img id="preview" class="w-full h-48 sm:h-64 object-cover rounded-xl shadow-lg" />
+            <button onclick="clearImage()" class="mt-3 text-sm text-blue-400 hover:text-blue-300 transition">
+                Changer l'image
+            </button>
+        </div>
+
+        <!-- Predict Button -->
+        <button onclick="send()"
+            class="w-full mt-6 bg-blue-600 hover:bg-blue-700 active:scale-98 transition px-6 py-3 rounded-xl font-semibold text-white shadow-lg">
+            Analyser l'image
+        </button>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden mt-6 text-center animate-fadeIn">
+            <div class="inline-block w-8 h-8 border-4 border-blue-400/30 border-t-blue-400 rounded-full animate-spin">
+            </div>
+            <p class="text-gray-400 mt-3 text-sm">Analyse en cours...</p>
+        </div>
+
+        <!-- Result -->
+        <div id="resultContainer" class="hidden mt-6 animate-fadeIn">
+            <div class="bg-gray-900/50 border border-gray-700 rounded-xl p-4 sm:p-5 text-center">
+                <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Résultat</p>
+                <p id="result" class="text-xl sm:text-2xl font-bold text-white"></p>
+                <p id="confidence" class="text-sm text-gray-400 mt-2"></p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const fileInput = document.getElementById("fileInput");
+        const preview = document.getElementById("preview");
+        const previewContainer = document.getElementById("previewContainer");
+        const dropzone = document.getElementById("dropzone");
+        const resultContainer = document.getElementById("resultContainer");
+        const loading = document.getElementById("loading");
+
+        function clearImage() {
+            fileInput.value = '';
+            previewContainer.classList.add("hidden");
+            resultContainer.classList.add("hidden");
+        }
+
+        fileInput.addEventListener("change", () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                alert('Veuillez sélectionner une image valide');
+                return;
+            }
+
+            preview.src = URL.createObjectURL(file);
+            previewContainer.classList.remove("hidden");
+            resultContainer.classList.add("hidden");
+        });
+
+        dropzone.addEventListener("dragover", e => {
+            e.preventDefault();
+            dropzone.classList.add("border-blue-500", "bg-gray-900/50");
+        });
+
+        dropzone.addEventListener("dragleave", () => {
+            dropzone.classList.remove("border-blue-500", "bg-gray-900/50");
+        });
+
+        dropzone.addEventListener("drop", e => {
+            e.preventDefault();
+            dropzone.classList.remove("border-blue-500", "bg-gray-900/50");
+
+            if (!e.dataTransfer.files.length) return;
+
+            const file = e.dataTransfer.files[0];
+            if (!file.type.startsWith('image/')) {
+                alert('Veuillez sélectionner une image valide');
+                return;
+            }
+
+            fileInput.files = e.dataTransfer.files;
+            preview.src = URL.createObjectURL(file);
+            previewContainer.classList.remove("hidden");
+            resultContainer.classList.add("hidden");
+        });
+
+        async function send() {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Aucune image sélectionnée.");
+                return;
+            }
+
+            loading.classList.remove("hidden");
+            resultContainer.classList.add("hidden");
+
+            const form = new FormData();
+            form.append("file", file);
+
+            try {
+                const res = await fetch("/predict", {
+                    method: "POST",
+                    body: form
+                });
+
+                if (!res.ok) {
+                    throw new Error('Erreur lors de la prédiction');
+                }
+
+                const data = await res.json();
+
+                loading.classList.add("hidden");
+                resultContainer.classList.remove("hidden");
+
+                const emoji = data.prediction.toLowerCase().includes('cat') ? '🐱' : '🐶';
+                document.getElementById("result").innerText = emoji + " " + data.prediction;
+
+                if (data.confidence) {
+                    document.getElementById("confidence").innerText =
+                        `Confiance: ${(data.confidence * 100).toFixed(1)}%`;
+                }
+            } catch (error) {
+                loading.classList.add("hidden");
+                resultContainer.classList.remove("hidden");
+                document.getElementById("result").innerText = "❌ Erreur: " + error.message;
+                document.getElementById("confidence").innerText = "";
+            }
+        }
+    </script>
+
+</body>
+
+</html>

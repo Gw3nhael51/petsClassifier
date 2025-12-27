@@ -1,28 +1,39 @@
-# Environnements virtuels
+# --- Environnements virtuels ---
 .venv/
 venv/
 
-# Données brutes et générées
-data/
-train/
-test/
-
-# Fichiers Kaggle
-*.zip
-*.json
-
-# Python
+# --- Python ---
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Logs
+# --- Logs ---
 *.log
 
-# VSCode
+# --- VSCode ---
 .vscode/
 
-# OS (macOS / Windows)
+# --- OS (macOS / Windows) ---
 .DS_Store
 Thumbs.db
+
+# --- Node / Tailwind ---
+node_modules/
+tailwindcss
+
+# --- ML Models ---
+*.h5
+*.keras
+*.pth
+*.onnx
+
+# --- Données brutes et générées ---
+data/
+train/
+test/
+mixed/
+
+# --- Archives / Kaggle ---
+*.zip
+*.json
